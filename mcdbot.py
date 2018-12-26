@@ -33,7 +33,7 @@ def onServerInfo(server, info):
               bot = mcbot(botname, info.player, 1)
             else:
               bot = mcbot(botname, info.player)
-              server.execute('gamemode creative ' + botname)
+              server.execute('gamemode spectator' + botname)
             botlist.append(bot)
             namelist.append(botname)
         elif (args[1] == 'stop') and (len(args) == 3):
