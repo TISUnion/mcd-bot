@@ -461,6 +461,8 @@ class NetworkingThread(threading.Thread):
                     self.connection.new_networking_thread = None
             self._run()
             self.connection._handle_exit()
+        except EOFError:
+          pass
         except BaseException as e:
             self.interrupt = True
             self.connection._handle_exception(e, sys.exc_info())
