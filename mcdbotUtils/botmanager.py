@@ -12,18 +12,16 @@ except:
   port = 25565
 
 class mcbot(object):
-  def __init__(self, name, owner, bot_id):
-    self.start(name, owner, bot_id)
+  def __init__(self, name, owner, keep=0):
+    self.start(name, owner, keep)
   
-  def start(self, name, owner, bot_id):
+  def start(self, name, owner, keep):
     self.bot = conn.Connection('127.0.0.1', port, None, name)
     self.bot.connect()
     self.owner = owner
-    self.bot_id = bot_id
+    self.name = name
+    self.keep = keep
 
   def stop(self):
-    try:
-      self.bot.disconnect()
-    except EOFError:
-      pass
+    self.bot.disconnect()
       
