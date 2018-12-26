@@ -28,7 +28,7 @@ def onServerInfo(server, info):
         elif (args[1] == 'add') and (len(args)>2):
           if ' -f' in info.content:
             args = info.content.replace(' -f', '').split(' ')
-            botname = args[2]
+            botname = 'bot_' + args[2]
           else:
             botname = info.player + '_b_'+ args[2]
           if (len(botname)>16):
