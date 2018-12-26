@@ -57,10 +57,11 @@ def onServerInfo(server, info):
             for bot in botlist:
               if bot.name == args[2]:
                 if bot.owner == info.player:
+                  server.tell(info.player, 'Teleporting...')
                   server.execute('gamemode spectator ' + args[2])
-                  sleep(0.4)
+                  sleep(3)
                   server.execute('tp ' + args[2] + ' ' + info.player)
-                  sleep(0.4)
+                  sleep(3)
                   server.execute('gamemode creative ' + args[2])
                 else:
                   server.tell(info.player, '你不是这个bot的主人')
