@@ -49,7 +49,7 @@ def onServerInfo(server, info):
             for bot in botlist:
               if bot.name == args[2]:
                 if bot.owner == info.player:
-                  server.execute('tp ' + args[3] + ' ' + info.player)
+                  server.execute('tp ' + args[2] + ' ' + info.player)
                 else:
                   server.tell(info.player, '你不是这个bot的主人')
         elif (args[1] == 'gm') and (len(args) == 4):
