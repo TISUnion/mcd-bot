@@ -9,6 +9,6 @@ def onServerInfo(server, info):
     if info.content.startswith('!!bot'):
       args = info.content.split(' ')
       if args[0] == '!!bot':
-        if len(args) == 2:
-          bot = mcbot(args[1])
+        if len(args) == 3:
+          bot = mcbot(args[1], info.player, args[2])
           botlist.append(bot)
