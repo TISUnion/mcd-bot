@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from plugins.mcdbotUtils.botmanager import mcbot
+from time import sleep
 
 helpmsg = '''=====MCD BOT=====
 命令帮助如下:
@@ -33,7 +34,8 @@ def onServerInfo(server, info):
               bot = mcbot(botname, info.player, 1)
             else:
               bot = mcbot(botname, info.player)
-              server.execute('gamemode spectator' + botname)
+              sleep(0.5)
+              server.execute('gamemode creative' + botname)
             botlist.append(bot)
             namelist.append(botname)
         elif (args[1] == 'stop') and (len(args) == 3):
