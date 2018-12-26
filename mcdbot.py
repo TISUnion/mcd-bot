@@ -60,7 +60,7 @@ def onServerInfo(server, info):
               if bot.name == args[2]:
                 if bot.owner == info.player:
                   if args[3] == 'c':
-                    server.execute('gamemode creative' + args[2])
+                    server.execute('gamemode creative ' + args[2])
                   if args[3] == 's':
                     server.execute('gamemode spectator ' + args[2])
                 else:
