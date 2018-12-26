@@ -5,7 +5,7 @@ from time import sleep
 
 helpmsg = '''=====MCD BOT=====
 命令帮助如下:
-!!bot add (注释) [-keep]：召唤一个bot,使用-keep参数来使bot在你下线的情况下不下线
+!!bot add (注释) [-keep] [-f(force)]：召唤一个bot,使用-keep参数使bot在你下线后不下线,使用-f强制忽略bot前缀
 !!bot stop (name)：让bot离开游戏
 !!bot tp (name)：让bot传送到你的地方
 !!bot gm (name) (c/s)：设置bot的gamemode(Creative / Spectator)
@@ -26,7 +26,11 @@ def onServerInfo(server, info):
           for line in helpmsg.splitlines():
             server.tell(info.player, line)
         elif (args[1] == 'add') and (len(args)>2):
-          botname = info.player + '_b_'+ args[2]
+          if ' -f' in info.content:
+            args = info.content.replace(' -f', '').split(' ')
+            botname = args[2]
+          else:
+            botname = info.player + '_b_'+ args[2]
           if (len(botname)>16):
             server.tell(info.player, '[MCD-bot]:名字太长（请控制在16个字符以内）')
           if botname in namelist:
@@ -36,7 +40,7 @@ def onServerInfo(server, info):
               bot = mcbot(botname, info.player, 1)
             else:
               bot = mcbot(botname, info.player)
-              sleep(0.5)
+              sleep(0.1)
               server.execute('gamemode creative ' + botname)
             botlist.append(bot)
             namelist.append(botname)
@@ -75,4 +79,17 @@ def onServerInfo(server, info):
           server.say('bot已清空')
         else:
           server.tell(info.player, '参数格式不正确')
+
+
+def onPlayerLeave(server, player):
+  global namelist
+  global botlist
+  removelist = []
+  for bot in botlist:
+    if (bot.owner == player) and (bot.keep == 0):
+      namelist.remove(bot.name)
+      bot.stop()
+      removelist.append(bot)
+  for bot in removelist:
+    botlist.remove(bot)
 
