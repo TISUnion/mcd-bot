@@ -40,8 +40,8 @@ def onServerInfo(server, info):
               bot = mcbot(botname, info.player, 1)
             else:
               bot = mcbot(botname, info.player)
-              sleep(0.1)
-              server.execute('gamemode creative ' + botname)
+            sleep(0.1)
+            server.execute('gamemode creative ' + botname)
             botlist.append(bot)
             namelist.append(botname)
         elif (args[1] == 'stop') and (len(args) == 3):
