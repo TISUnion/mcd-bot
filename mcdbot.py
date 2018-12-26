@@ -27,6 +27,8 @@ def onServerInfo(server, info):
             server.tell(info.player, line)
         elif (args[1] == 'add') and (len(args)>2):
           botname = info.player + '_b_'+ args[2]
+          if (len(botname)>16):
+            server.tell(info.player, '[MCD-bot]:名字太长（请控制在16个字符以内）')
           if botname in namelist:
             server.tell(info.player, 'bot已经存在!')
           else:
