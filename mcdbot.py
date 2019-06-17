@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from plugins.mcdbotUtils.botmanager import mcbot
 from time import sleep
+import json
 
 helpmsg = '''=====MCD BOT=====
 命令帮助如下:
@@ -14,6 +14,24 @@ helpmsg = '''=====MCD BOT=====
 
 botlist = []
 namelist = []
+config = {}
+default = 'protocol'
+
+try:
+  with open('./config/mcdbot.json','r') as handle:
+    config = json.load(handle)
+except:
+  print('could not open config file, using default(' + default + ')')
+  config['mode'] = default
+  with open('./config/mcdbot.json','w') as handle:
+    json.dump(config, handle)
+
+if config['mode'] == 'carpet':
+  from plugins.mcdbotUtils.carpetbot import mcbot
+  mode = 'carpet'
+else:
+  from plugins.mcdbotUtils.botmanager import mcbot
+  mode = 'network'
 
 def onServerInfo(server, info):
   if (info.isPlayer == 1):
@@ -25,6 +43,8 @@ def onServerInfo(server, info):
         if len(args) == 1:
           for line in helpmsg.splitlines():
             server.tell(info.player, line)
+        elif (args[1] == 'mode'):
+          server.say(config['mode'])
         elif (args[1] == 'add') and (len(args)>2):
           if ' -f' in info.content:
             args = info.content.replace(' -f', '').split(' ')
@@ -37,9 +57,15 @@ def onServerInfo(server, info):
             server.tell(info.player, 'bot已经存在!')
           else:
             if (len(args) == 4) and (args[3] == '-keep'):
-              bot = mcbot(botname, info.player, 1)
+              if config['mode'] == 'carpet':
+                bot = mcbot(botname, info.player, server, 1)
+              else:
+                bot = mcbot(botname, info.player, 1)
             else:
-              bot = mcbot(botname, info.player)
+              if config['mode'] == 'carpet':
+                bot = mcbot(botname ,info.player, server)
+              else:
+                bot = mcbot(botname, info.player)
             sleep(0.1)
             server.execute('gamemode creative ' + botname)
             botlist.append(bot)
@@ -50,7 +76,10 @@ def onServerInfo(server, info):
             namelist.remove(botname)
             for bot in botlist:
               if bot.name == botname:
-                bot.stop()
+                if config['mode'] == 'carpet':
+                  bot.stop(server)
+                else:
+                  bot.stop()
                 botlist.remove(bot)
         elif (args[1] == 'tp') and (len(args) == 3):
           if args[2] in namelist:
@@ -89,7 +118,10 @@ def onPlayerLeave(server, player):
   for bot in botlist:
     if (bot.owner == player) and (bot.keep == 0):
       namelist.remove(bot.name)
-      bot.stop()
+      if config['mode'] == 'carpet':
+        bot.stop(server)
+      else:
+        bot.stop()
       removelist.append(bot)
   for bot in removelist:
     botlist.remove(bot)
