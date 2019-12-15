@@ -61,7 +61,7 @@ class Packet(object):
     def read(self, file_object):
         for field in self.definition:
             for var_name, data_type in field.items():
-                value = data_type.read(file_object)
+                value = data_type.read_with_context(file_object, self.context)
                 setattr(self, var_name, value)
 
     # Writes a packet buffer to the socket with the appropriate headers
@@ -104,7 +104,7 @@ class Packet(object):
         for field in self.definition:
             for var_name, data_type in field.items():
                 data = getattr(self, var_name)
-                data_type.send(data, packet_buffer)
+                data_type.send_with_context(data, packet_buffer, self.context)
 
     def __repr__(self):
         str = type(self).__name__
@@ -112,8 +112,9 @@ class Packet(object):
             str = '0x%02X %s' % (self.id, str)
         fields = self.fields
         if fields is not None:
-            str = '%s(%s)' % (str, ', '.join('%s=%s' %
-                              (a, self.field_string(a)) for a in fields))
+            inner_str = ', '.join('%s=%s' % (a, self.field_string(a))
+                                  for a in fields if hasattr(self, a))
+            str = '%s(%s)' % (str, inner_str)
         return str
 
     @property
@@ -129,7 +130,7 @@ class Packet(object):
         """
         value = getattr(self, field, None)
 
-        enum_class = self.field_enum(field)
+        enum_class = self.field_enum(field, self.context)
         if enum_class is not None:
             name = enum_class.name_from_value(value)
             if name is not None:
@@ -138,7 +139,7 @@ class Packet(object):
         return repr(value)
 
     @classmethod
-    def field_enum(cls, field):
+    def field_enum(cls, field, context=None):
         """ The subclass of 'minecraft.networking.types.Enum' associated with
             this field, or None if there is no such class.
         """

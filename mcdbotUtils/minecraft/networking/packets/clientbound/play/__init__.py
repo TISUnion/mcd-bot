@@ -3,8 +3,9 @@ from ....packets import (
 )
 
 from ....types import (
-    Integer, FixedPointInteger, UnsignedByte, Byte, Boolean, UUID, Short,
-    VarInt, Double, Float, String, Enum,
+    Integer, FixedPointInteger, Angle, UnsignedByte, Byte, Boolean, UUID,
+    Short, VarInt, Double, Float, String, Enum, Difficulty, Dimension,
+    GameMode, Vector, Direction, PositionAndLook, multi_attribute_alias,
 )
 
 from .combat_event_packet import CombatEventPacket
@@ -14,6 +15,8 @@ from .player_position_and_look_packet import PlayerPositionAndLookPacket
 from .spawn_object_packet import SpawnObjectPacket
 from .block_change_packet import BlockChangePacket, MultiBlockChangePacket
 from .explosion_packet import ExplosionPacket
+from .sound_effect_packet import SoundEffectPacket
+from .face_player_packet import FacePlayerPacket
 
 
 # Formerly known as state_playing_clientbound.
@@ -21,6 +24,7 @@ def get_packets(context):
     packets = {
         KeepAlivePacket,
         JoinGamePacket,
+        ServerDifficultyPacket,
         ChatMessagePacket,
         PlayerPositionAndLookPacket,
         MapPacket,
@@ -34,12 +38,22 @@ def get_packets(context):
         SpawnObjectPacket,
         BlockChangePacket,
         MultiBlockChangePacket,
+        RespawnPacket,
         PluginMessagePacket,
         PlayerListHeaderAndFooterPacket,
+        EntityLookPacket
     }
     if context.protocol_version <= 47:
         packets |= {
             SetCompressionPacket,
+        }
+    if context.protocol_version >= 94:
+        packets |= {
+            SoundEffectPacket,
+        }
+    if context.protocol_version >= 352:
+        packets |= {
+            FacePlayerPacket
         }
     return packets
 
@@ -47,7 +61,8 @@ def get_packets(context):
 class KeepAlivePacket(AbstractKeepAlivePacket):
     @staticmethod
     def get_id(context):
-        return 0x21 if context.protocol_version >= 389 else \
+        return 0x20 if context.protocol_version >= 471 else \
+               0x21 if context.protocol_version >= 389 else \
                0x20 if context.protocol_version >= 345 else \
                0x1F if context.protocol_version >= 332 else \
                0x20 if context.protocol_version >= 318 else \
@@ -70,10 +85,35 @@ class JoinGamePacket(Packet):
         {'entity_id': Integer},
         {'game_mode': UnsignedByte},
         {'dimension': Integer if context.protocol_version >= 108 else Byte},
-        {'difficulty': UnsignedByte},
+        {'difficulty': UnsignedByte} if context.protocol_version < 464 else {},
         {'max_players': UnsignedByte},
         {'level_type': String},
-        {'reduced_debug_info': Boolean}])
+        {'render_distance': VarInt} if context.protocol_version >= 468 else {},
+        {'reduced_debug_info': Boolean},
+    ])
+
+    # These aliases declare the Enum type corresponding to each field:
+    Difficulty = Difficulty
+    GameMode = GameMode
+    Dimension = Dimension
+
+
+class ServerDifficultyPacket(Packet):
+    @staticmethod
+    def get_id(context):
+        return 0x0D if context.protocol_version >= 332 else \
+               0x0E if context.protocol_version >= 318 else \
+               0x0D if context.protocol_version >= 70 else \
+               0x41
+
+    packet_name = 'server difficulty'
+    get_definition = staticmethod(lambda context: [
+        {'difficulty': UnsignedByte},
+        {'is_locked': Boolean} if context.protocol_version >= 464 else {},
+    ])
+
+    # These aliases declare the Enum type corresponding to each field:
+    Difficulty = Difficulty
 
 
 class ChatMessagePacket(Packet):
@@ -99,7 +139,8 @@ class ChatMessagePacket(Packet):
 class DisconnectPacket(Packet):
     @staticmethod
     def get_id(context):
-        return 0x1B if context.protocol_version >= 345 else \
+        return 0x1A if context.protocol_version >= 471 else \
+               0x1B if context.protocol_version >= 345 else \
                0x1A if context.protocol_version >= 332 else \
                0x1B if context.protocol_version >= 318 else \
                0x1A if context.protocol_version >= 107 else \
@@ -135,17 +176,32 @@ class SpawnPlayerPacket(Packet):
         else {'y': FixedPointInteger},
         {'z': Double} if context.protocol_version >= 100
         else {'z': FixedPointInteger},
-        {'yaw': Float},
-        {'pitch': Float},
+        {'yaw': Angle},
+        {'pitch': Angle},
+        {'current_item': Short} if context.protocol_version <= 49 else {},
         # TODO: read entity metadata
-        {'current_item': Short} if context.protocol_version <= 49 else {}
     ])
+
+    # Access the 'x', 'y', 'z' fields as a Vector tuple.
+    position = multi_attribute_alias(Vector, 'x', 'y', 'z')
+
+    # Access the 'yaw', 'pitch' fields as a Direction tuple.
+    look = multi_attribute_alias(Direction, 'yaw', 'pitch')
+
+    # Access the 'x', 'y', 'z', 'yaw', 'pitch' fields as a PositionAndLook.
+    # NOTE: modifying the object retrieved from this property will not change
+    # the packet; it can only be changed by attribute or property assignment.
+    position_and_look = multi_attribute_alias(
+        PositionAndLook, 'x', 'y', 'z', 'yaw', 'pitch')
 
 
 class EntityVelocityPacket(Packet):
     @staticmethod
     def get_id(context):
-        return 0x41 if context.protocol_version >= 389 else \
+        return 0x45 if context.protocol_version >= 471 else \
+               0x41 if context.protocol_version >= 461 else \
+               0x42 if context.protocol_version >= 451 else \
+               0x41 if context.protocol_version >= 389 else \
                0x40 if context.protocol_version >= 352 else \
                0x3F if context.protocol_version >= 345 else \
                0x3E if context.protocol_version >= 336 else \
@@ -167,7 +223,10 @@ class EntityVelocityPacket(Packet):
 class UpdateHealthPacket(Packet):
     @staticmethod
     def get_id(context):
-        return 0x44 if context.protocol_version >= 389 else \
+        return 0x48 if context.protocol_version >= 471 else \
+               0x44 if context.protocol_version >= 461 else \
+               0x45 if context.protocol_version >= 451 else \
+               0x44 if context.protocol_version >= 389 else \
                0x43 if context.protocol_version >= 352 else \
                0x42 if context.protocol_version >= 345 else \
                0x41 if context.protocol_version >= 336 else \
@@ -185,10 +244,40 @@ class UpdateHealthPacket(Packet):
     ])
 
 
+class RespawnPacket(Packet):
+    @staticmethod
+    def get_id(context):
+        return 0x3A if context.protocol_version >= 471 else \
+               0x38 if context.protocol_version >= 461 else \
+               0x39 if context.protocol_version >= 451 else \
+               0x38 if context.protocol_version >= 389 else \
+               0x37 if context.protocol_version >= 352 else \
+               0x36 if context.protocol_version >= 345 else \
+               0x35 if context.protocol_version >= 336 else \
+               0x34 if context.protocol_version >= 332 else \
+               0x35 if context.protocol_version >= 318 else \
+               0x33 if context.protocol_version >= 70 else \
+               0x07
+
+    packet_name = 'respawn'
+    get_definition = staticmethod(lambda context: [
+        {'dimension': Integer},
+        {'difficulty': UnsignedByte} if context.protocol_version < 464 else {},
+        {'game_mode': UnsignedByte},
+        {'level_type': String},
+    ])
+
+    # These aliases declare the Enum type corresponding to each field:
+    Difficulty = Difficulty
+    Dimension = Dimension
+    GameMode = GameMode
+
+
 class PluginMessagePacket(AbstractPluginMessagePacket):
     @staticmethod
     def get_id(context):
-        return 0x19 if context.protocol_version >= 345 else \
+        return 0x18 if context.protocol_version >= 471 else \
+               0x19 if context.protocol_version >= 345 else \
                0x18 if context.protocol_version >= 332 else \
                0x19 if context.protocol_version >= 318 else \
                0x18 if context.protocol_version >= 70 else \
@@ -198,7 +287,11 @@ class PluginMessagePacket(AbstractPluginMessagePacket):
 class PlayerListHeaderAndFooterPacket(Packet):
     @staticmethod
     def get_id(context):
-        return 0x4E if context.protocol_version >= 393 else \
+        return 0x53 if context.protocol_version >= 471 else \
+               0x5F if context.protocol_version >= 461 else \
+               0x50 if context.protocol_version >= 451 else \
+               0x4F if context.protocol_version >= 441 else \
+               0x4E if context.protocol_version >= 393 else \
                0x4A if context.protocol_version >= 338 else \
                0x49 if context.protocol_version >= 335 else \
                0x47 if context.protocol_version >= 110 else \
@@ -209,3 +302,22 @@ class PlayerListHeaderAndFooterPacket(Packet):
     definition = [
         {'header': String},
         {'footer': String}]
+
+
+class EntityLookPacket(Packet):
+    @staticmethod
+    def get_id(context):
+        return 0x2A if context.protocol_version >= 389 else \
+               0x29 if context.protocol_version >= 345 else \
+               0x28 if context.protocol_version >= 318 else \
+               0x27 if context.protocol_version >= 94 else \
+               0x28 if context.protocol_version >= 70 else \
+               0x16
+
+    packet_name = 'entity look'
+    definition = [
+        {'entity_id': VarInt},
+        {'yaw': Angle},
+        {'pitch': Angle},
+        {'on_ground': Boolean}
+    ]
