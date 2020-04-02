@@ -106,5 +106,5 @@ venv.bak/
 *.stackdump
 start.sh
 
-
+mcdbot-es.py
 .idea/

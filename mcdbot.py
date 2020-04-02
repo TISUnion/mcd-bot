@@ -140,3 +140,10 @@ def on_info(server, info):
 
 def on_player_left(server, player):
   onPlayerLeave(server, player)
+
+
+def on_load(server, old):
+  if old is not None:
+    global namelist, botlist
+    namelist = old.namelist
+    botlist = old.botlist
