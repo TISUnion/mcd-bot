@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
-
+import copy
+import os
+import sys
 from time import sleep
 import json
 
@@ -23,14 +25,17 @@ try:
 except:
   print('could not open config file, using default(' + default + ')')
   config['mode'] = default
+  if not os.path.isdir('./config'):
+    os.makedirs('./config')
   with open('./config/mcdbot.json','w') as handle:
     json.dump(config, handle)
 
+sys.path.append("plugins/")
 if config['mode'] == 'carpet':
-  from plugins.mcdbotUtils.carpetbot import mcbot
+  from mcdbotUtils.carpetbot import mcbot
   mode = 'carpet'
 else:
-  from plugins.mcdbotUtils.botmanager import mcbot
+  from mcdbotUtils.botmanager import mcbot
   mode = 'network'
 
 def onServerInfo(server, info):
@@ -126,3 +131,12 @@ def onPlayerLeave(server, player):
   for bot in removelist:
     botlist.remove(bot)
 
+
+def on_info(server, info):
+  info2 = copy.deepcopy(info)
+  info2.isPlayer = info2.is_player
+  onServerInfo(server, info2)
+
+
+def on_player_left(server, player):
+  onPlayerLeave(server, player)

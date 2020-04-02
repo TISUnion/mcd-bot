@@ -748,15 +748,14 @@ class PlayingReactor(PacketReactor):
                 teleport_confirm = serverbound.play.TeleportConfirmPacket()
                 teleport_confirm.teleport_id = packet.teleport_id
                 self.connection.write_packet(teleport_confirm)
-            else:
-                position_response = serverbound.play.PositionAndLookPacket()
-                position_response.x = packet.x
-                position_response.feet_y = packet.y
-                position_response.z = packet.z
-                position_response.yaw = packet.yaw
-                position_response.pitch = packet.pitch
-                position_response.on_ground = True
-                self.connection.write_packet(position_response)
+            position_response = serverbound.play.PositionAndLookPacket()
+            position_response.x = packet.x
+            position_response.feet_y = packet.y
+            position_response.z = packet.z
+            position_response.yaw = packet.yaw
+            position_response.pitch = packet.pitch
+            position_response.on_ground = True
+            self.connection.write_packet(position_response)
             self.connection.spawned = True
 
         elif packet.packet_name == "disconnect":

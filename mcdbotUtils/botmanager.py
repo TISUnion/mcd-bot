@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from minecraft.networking import connection as conn
+from .minecraft.networking import connection as conn
 import traceback
 
 try:
