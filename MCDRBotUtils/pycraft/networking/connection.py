@@ -498,7 +498,7 @@ class Connection(object):
         # If allowed by the final exception handler, re-raise the exception.
         if self.handle_exception is None and not caught:
             # dont spam on disconnected
-            if not self.connected and type(exc) in [BrokenPipeError]:
+            if not self.connected and type(exc) in [BrokenPipeError, EOFError]:
                 pass
             else:
                raise_(*exc_info)
