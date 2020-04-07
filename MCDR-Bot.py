@@ -90,6 +90,7 @@ def on_load(server, old):
 	if old is not None:
 		global bot_list
 		bot_list = old.bot_list
+	server.add_help_message('!!bot', 'Bot相关指令')
 
 
 def on_server_stop(server, code):
