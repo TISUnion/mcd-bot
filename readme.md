@@ -2,7 +2,7 @@ MCDR bot
 --------
 A [MCDReforged](https://github.com/Fallen-Breath/MCDReforged) plugin for adding bots into your server
 
-Copy `MCDR-Bot.py` and `MCDRBotUtils/` into the `plugins/` folder of MCDR and that's it 
+Copy `MCDR-Bot.py` and `MCDRBotUtils/` into the `plugins/` folder of MCDR, then `pip install -r requirement.txt` and that's it 
 
 Bot (fake player) is based on [pyCraft](https://github.com/ammaraskar/pyCraft), supports up to 1.15.2 server
 
