@@ -107,14 +107,18 @@ def onServerInfo(server, info):
                 else:
                   server.tell(info.player, '你不是这个bot的主人')
         elif (args[1] == 'kickall') and (len(args) == 2):
-          namelist = []
-          for bot in botlist:
-            bot.stop()
-          botlist = []
+          clean_bots()
           server.say('bot已清空')
         else:
           server.tell(info.player, '参数格式不正确')
 
+
+def clean_bots():
+  global namelist, botlist
+  namelist = []
+  for bot in botlist:
+      bot.stop()
+  botlist = []
 
 def onPlayerLeave(server, player):
   global namelist
@@ -147,3 +151,7 @@ def on_load(server, old):
     global namelist, botlist
     namelist = old.namelist
     botlist = old.botlist
+
+
+def on_server_stop(server, code):
+  clean_bots()
