@@ -2,9 +2,15 @@
 import re
 import sys
 
-sys.path.append("plugins/")
 import MCDRBotUtils.bot_manager as bot_manager
 
+PLUGIN_METADATA = {
+	'id': 'mcdr_pycraft_bot',
+	'version': '1.0.0',
+	'name': 'MCDR Bot powered by pyCraft',
+	'author': 'Fallen_Breath',
+	'link': 'https://github.com/MCDReforged/MCDR-bot'
+}
 
 HELP_MESSAGE = '''
 ------ MCDR BOT ------
@@ -50,37 +56,37 @@ def remove_all():
 	bot_list = []
 
 
-def on_info(server, info):
-	if info.is_user:
-		if info.content.startswith('!!bot'):
-			args = info.content.split(' ')
-			global bot_list
-			if args[0] == '!!bot':
-				if len(args) == 1:
-					server.reply(info, HELP_MESSAGE)
-				elif args[1] == 'add' and len(args) == 3:
-					bot_name = 'bot_' + args[2]
-					if not re.fullmatch(r'\w{1,16}', bot_name):
-						reply(server, info, 'Bot名字不合法！')
-					if get_bot(bot_name):
-						reply(server, info, 'Bot已经存在!')
-					else:
-						add_bot(bot_name)
-				elif args[1] == 'stop' and len(args) == 3:
-					remove_bot(args[2])
-				elif args[1] == 'tp' and len(args) == 3 and info.is_player:
-					bot_name = args[2]
-					if get_bot(bot_name):
-						reply(server, info, '传送中...')
-						server.execute('execute at {0} run tp {1} {0}'.format(info.player, bot_name))
-				elif args[1] == 'clean' and len(args) == 2:
-					remove_all()
-					reply(server, info, 'bot已清空')
+def on_user_info(server, info):
+	if info.content.startswith('!!bot'):
+		info.cancel_send_to_server()
+		args = info.content.split(' ')
+		global bot_list
+		if args[0] == '!!bot':
+			if len(args) == 1:
+				server.reply(info, HELP_MESSAGE)
+			elif args[1] == 'add' and len(args) == 3:
+				bot_name = 'bot_' + args[2]
+				if not re.fullmatch(r'\w{1,16}', bot_name):
+					reply(server, info, 'Bot名字不合法！')
+				if get_bot(bot_name):
+					reply(server, info, 'Bot已经存在!')
 				else:
-					reply(server, info, '参数格式不正确')
+					add_bot(bot_name)
+			elif args[1] == 'stop' and len(args) == 3:
+				remove_bot(args[2])
+			elif args[1] == 'tp' and len(args) == 3 and info.is_player:
+				bot_name = args[2]
+				if get_bot(bot_name):
+					reply(server, info, '传送中...')
+					server.execute('execute at {0} run tp {1} {0}'.format(info.player, bot_name))
+			elif args[1] == 'clean' and len(args) == 2:
+				remove_all()
+				reply(server, info, 'bot已清空')
+			else:
+				reply(server, info, '参数格式不正确')
 
 
-def on_player_joined(server, player):
+def on_player_joined(server, player, info):
 	if get_bot(player):
 		server.execute('gamemode {} {}'.format(GAMEMODE, player))
 
@@ -90,7 +96,7 @@ def on_load(server, old):
 	if old is not None:
 		global bot_list
 		bot_list = old.bot_list
-	server.add_help_message('!!bot', 'Bot相关指令')
+	server.register_help_message('!!bot', 'Bot相关指令')
 
 
 def on_server_stop(server, code):
