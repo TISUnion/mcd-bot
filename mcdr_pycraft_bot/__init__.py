@@ -42,7 +42,9 @@ def add_bot(source: CommandSource, name: str):
 	else:
 		@new_thread('bot connection')
 		def connect():
-			bot_storage.add_bot(name, config.address, config.port)
+			succeed = bot_storage.add_bot(name, config.address, config.port)
+			if not succeed:
+				reply(source, 'bot {}连接服务器失败')
 		connect()
 
 
@@ -73,7 +75,7 @@ def list_bots(source: CommandSource, reply_func: Callable[[CommandSource, Any], 
 	name_list = bot_storage.get_bot_name_list()
 	reply_func(source, 'bot列表：{}'.format('' if len(name_list) > 0 else '空'))
 	for bot_name in name_list:
-		reply(source, RText.format(
+		reply_func(source, RText.format(
 			'- {} {}',
 			RText('[x]', RColor.red).h('{}给我下线'.format(bot_name)).c(RAction.suggest_command, '!!bot stop {}'.format(bot_name)),
 			bot_name
@@ -85,9 +87,14 @@ def send_help(source: CommandSource):
 	list_bots(source, type(source).reply)
 
 
-def on_player_joined(server, player, info):
+def on_player_joined(server, player: str, info):
 	if bot_storage.is_bot(player):
 		server.execute('gamemode {} {}'.format(config.gamemode, player))
+
+
+def on_player_left(server, player: str):
+	if bot_storage.is_bot(player):
+		bot_storage.remove_bot(player)
 
 
 def on_load(server: PluginServerInterface, old):
@@ -110,7 +117,7 @@ def on_load(server: PluginServerInterface, old):
 			requires(lambda src: src.is_player, lambda: '需要玩家执行此命令').
 			then(bot_name().runs(lambda src, ctx: tp_bot(src, ctx['bot_name'])))
 		).
-		then(Literal('list').runs(list_bots)).
+		then(Literal('list').runs(lambda src: list_bots(src))).
 		then(Literal('clean').runs(remove_all))
 	)
 
