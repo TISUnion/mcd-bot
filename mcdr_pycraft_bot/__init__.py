@@ -1,5 +1,5 @@
 import re
-from typing import Optional
+from typing import Optional, Any, Callable
 
 from mcdreforged.api.all import *
 from mcdr_pycraft_bot.bot_manager import BotStorage
@@ -20,6 +20,7 @@ HELP_MESSAGE = '''
 §7!!bot add §b<name>§r：召唤一个bot，名称为§bbot_<name>§r
 §7!!bot stop §b<name>§r：让名称为§b<name>§r的bot离开游戏
 §7!!bot tp §b<name>§r：让名称为§b<name>§r的bot传送到你的位置
+§7!!bot list§r：列出当前所有的bot名称
 §7!!bot clean§r：使所有bot离开游戏
 见配置文件以了解更多设置
 '''.strip()
@@ -28,16 +29,16 @@ bot_storage = BotStorage()
 
 
 def reply(source: CommandSource, msg):
-	source.reply('[MCDR-bot] ' + msg)
+	source.reply('[MCDR-Bot] ' + msg)
 
 
 def add_bot(source: CommandSource, name: str):
 	if not name.startswith(config.name_prefix):
 		name = config.name_prefix + name
 	if not re.fullmatch(r'\w{1,16}', name):
-		reply(source, 'Bot名字{}不合法！'.format(name))
+		reply(source, 'bot名字{}不合法！'.format(name))
 	if bot_storage.is_bot(name):
-		reply(source, 'Bot {}已经存在!'.format(name))
+		reply(source, 'bot {}已经存在!'.format(name))
 	else:
 		@new_thread('bot connection')
 		def connect():
@@ -47,15 +48,15 @@ def add_bot(source: CommandSource, name: str):
 
 def remove_bot(source: CommandSource, name: str):
 	if bot_storage.remove_bot(name):
-		reply(source, '已清除Bot {}'.format(name))
+		reply(source, '已清除bot {}'.format(name))
 	else:
-		reply(source, 'Bot {}不存在!'.format(name))
+		reply(source, 'bot {}不存在!'.format(name))
 
 
 def tp_bot(source: PlayerCommandSource, name: str):
 	bot = bot_storage.get_bot(name)
 	if bot is None:
-		reply(source, 'Bot {}不存在!'.format(name))
+		reply(source, 'bot {}不存在!'.format(name))
 	else:
 		reply(source, '传送中...')
 		source.get_server().execute('execute at {0} run tp {1} {0}'.format(source.player, name))
@@ -66,6 +67,22 @@ def remove_all(source: Optional[CommandSource]):
 		bot_storage.remove_bot(bot_name)
 	if source is not None:
 		reply(source, 'bot已清空')
+
+
+def list_bots(source: CommandSource, reply_func: Callable[[CommandSource, Any], Any] = reply):
+	name_list = bot_storage.get_bot_name_list()
+	reply_func(source, 'bot列表：{}'.format('' if len(name_list) > 0 else '空'))
+	for bot_name in name_list:
+		reply(source, RText.format(
+			'- {} {}',
+			RText('[x]', RColor.red).h('{}给我下线'.format(bot_name)).c(RAction.suggest_command, '!!bot stop {}'.format(bot_name)),
+			bot_name
+		))
+
+
+def send_help(source: CommandSource):
+	source.reply(HELP_MESSAGE)
+	list_bots(source, type(source).reply)
 
 
 def on_player_joined(server, player, info):
@@ -85,7 +102,7 @@ def on_load(server: PluginServerInterface, old):
 
 	server.register_command(
 		Literal('!!bot').
-		runs(lambda src: src.reply(HELP_MESSAGE)).
+		runs(send_help).
 		then(Literal('add').then(bot_name().runs(lambda src, ctx: add_bot(src, ctx['bot_name'])))).
 		then(Literal('stop').then(bot_name().runs(lambda src, ctx: remove_bot(src, ctx['bot_name'])))).
 		then(
@@ -93,6 +110,7 @@ def on_load(server: PluginServerInterface, old):
 			requires(lambda src: src.is_player, lambda: '需要玩家执行此命令').
 			then(bot_name().runs(lambda src, ctx: tp_bot(src, ctx['bot_name'])))
 		).
+		then(Literal('list').runs(list_bots)).
 		then(Literal('clean').runs(remove_all))
 	)
 

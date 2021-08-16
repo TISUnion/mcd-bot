@@ -14,5 +14,6 @@ Don't forget to write your server port in `config/mcdr_pycraft_bot/config.json`
 !!bot add <name>: 召唤一个bot，名称为bot_<name>  |  summon a bot named bot_<name>
 !!bot stop <name>: 让名称为<name>的bot离开游戏  |  remove the bot named <name>
 !!bot tp <name>: 让bot传送到你的位置  |  teleport the bot to your position
+!!bot list：列出当前所有的bot名称 | list all bots
 !!bot clean: 使所有bot离开游戏  |  remove all bots
 ```
