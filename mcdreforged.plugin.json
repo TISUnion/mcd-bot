@@ -2,7 +2,10 @@
 	"id": "mcdr_pycraft_bot",
 	"version": "1.1.0",
 	"name": "MCDR Bot",
-	"description": "MCDR Bot powered by pyCraft",
+	"description": {
+		"en_us": "MCDR Bot powered by pyCraft",
+		"zh_cn": "使用 pycraft 的假人插件"
+	},
 	"author": "Fallen_Breath",
 	"link": "https://github.com/MCDReforged/MCDR-bot",
 	"resources": ["LICENSE"]
