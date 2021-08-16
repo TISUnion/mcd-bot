@@ -1,3 +1,0 @@
-'''
-here comes basic functions
-'''
