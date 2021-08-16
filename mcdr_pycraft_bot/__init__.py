@@ -37,6 +37,7 @@ def add_bot(source: CommandSource, name: str):
 		name = config.name_prefix + name
 	if not re.fullmatch(r'\w{1,16}', name):
 		reply(source, 'bot名字{}不合法！'.format(name))
+		return
 	if bot_storage.is_bot(name):
 		reply(source, 'bot {}已经存在!'.format(name))
 	else:
