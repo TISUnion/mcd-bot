@@ -7,10 +7,10 @@ from .minecraft.networking import connection
 
 
 class Bot:
-	def __init__(self, bot_list: 'BotStorage', name: str, port: int):
+	def __init__(self, bot_list: 'BotStorage', name: str, address: str, port: int):
 		self.name = name
 		self.bot = connection.Connection(
-			address='127.0.0.1',
+			address=address,
 			port=port,
 			auth_token=None,
 			username=name,
@@ -29,8 +29,8 @@ class BotStorage(Dict[str, Bot]):
 		super().__init__()
 		self.__lock = RLock()
 
-	def add_bot(self, name: str, port: int):
-		bot = Bot(self, name, port)
+	def add_bot(self, name: str, address: str, port: int):
+		bot = Bot(self, name, address, port)
 		with self.__lock:
 			self[name] = bot
 

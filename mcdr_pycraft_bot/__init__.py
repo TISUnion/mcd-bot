@@ -6,8 +6,10 @@ from mcdr_pycraft_bot.bot_manager import BotStorage
 
 
 class Config(Serializable):
+	address: str = '127.0.0.1'
 	port: int = 25565
 	gamemode: str = 'survival'
+	name_prefix: str = 'bot_'
 
 
 config: Config
@@ -19,6 +21,7 @@ HELP_MESSAGE = '''
 §7!!bot stop §b<name>§r：让名称为§b<name>§r的bot离开游戏
 §7!!bot tp §b<name>§r：让名称为§b<name>§r的bot传送到你的位置
 §7!!bot clean§r：使所有bot离开游戏
+见配置文件以了解更多设置
 '''.strip()
 
 bot_storage = BotStorage()
@@ -29,16 +32,16 @@ def reply(source: CommandSource, msg):
 
 
 def add_bot(source: CommandSource, name: str):
-	if not name.startswith('bot_'):
-		name = 'bot_' + name
+	if not name.startswith(config.name_prefix):
+		name = config.name_prefix + name
 	if not re.fullmatch(r'\w{1,16}', name):
-		reply(source, 'Bot名字不合法！')
+		reply(source, 'Bot名字{}不合法！'.format(name))
 	if bot_storage.is_bot(name):
 		reply(source, 'Bot {}已经存在!'.format(name))
 	else:
 		@new_thread('bot connection')
 		def connect():
-			bot_storage.add_bot(name, config.port)
+			bot_storage.add_bot(name, config.address, config.port)
 		connect()
 
 
