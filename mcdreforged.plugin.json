@@ -4,5 +4,6 @@
 	"name": "MCDR Bot",
 	"description": "MCDR Bot powered by pyCraft",
 	"author": "Fallen_Breath",
-	"link": "https://github.com/MCDReforged/MCDR-bot"
+	"link": "https://github.com/MCDReforged/MCDR-bot",
+	"resources": ["LICENSE"]
 }
