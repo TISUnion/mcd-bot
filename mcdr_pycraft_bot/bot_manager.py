@@ -7,14 +7,16 @@ from .minecraft.networking.connection import NetworkingThread, Connection
 
 
 class Bot:
-	def __init__(self, name: str, address: str, port: int):
+	def __init__(self, storage: 'BotStorage', name: str, address: str, port: int):
+		self.__storage = storage
 		self.name = name
 		self.connection = Connection(
 			address=address,
 			port=port,
 			auth_token=None,
 			username=name,
-			handle_exception=self.handle_exception
+			handle_exception=self.handle_exception,
+			handle_exit=self.handle_exit
 		)
 		self.connection.connect()
 
@@ -23,6 +25,11 @@ class Bot:
 
 	def handle_exception(self, exc, exc_info):
 		ServerInterface.get_instance().logger.warning('Exception at MCDR bot {}: {}'.format(self.name, exc))
+		self.handle_exit()
+
+	def handle_exit(self):
+		ServerInterface.get_instance().logger.warning('Disconnected')
+		self.__storage.remove_bot(self.name)
 
 
 class BotStorage(Dict[str, Bot]):
@@ -33,10 +40,14 @@ class BotStorage(Dict[str, Bot]):
 
 	@staticmethod
 	def __patch_pycraft():
-		NetworkingThread.getName = lambda self: 'MCDR Bot {}'.format(self.connection.username)
+		def modify_thread_name(self, *args, **kwargs):
+			original_init(self, *args, **kwargs)
+			self.name = 'MCDR-Bot {}'.format(self.connection.username)
+		original_init = NetworkingThread.__init__
+		NetworkingThread.__init__ = modify_thread_name
 
 	def add_bot(self, name: str, address: str, port: int) -> bool:
-		bot = Bot(name, address, port)
+		bot = Bot(self, name, address, port)
 		if bot.connection.connected:
 			with self.__lock:
 				self[name] = bot
