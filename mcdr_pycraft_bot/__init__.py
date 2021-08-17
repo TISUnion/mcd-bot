@@ -98,10 +98,9 @@ def on_player_left(server, player: str):
 		bot_storage.remove_bot(player)
 
 
-def on_load(server: PluginServerInterface, old):
+def on_load(server: PluginServerInterface, old_module):
 	global bot_storage, config
-	if old is not None:
-		bot_storage = old.bot_storage
+	bot_storage.import_bots(getattr(old_module, 'bot_storage', {}))
 	config = server.load_config_simple(target_class=Config)
 	server.register_help_message('!!bot', 'MCDR Bot相关指令')
 

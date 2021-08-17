@@ -3,13 +3,13 @@ from typing import List, Dict, Optional
 
 from mcdreforged.api.all import *
 
-from .minecraft.networking import connection
+from .minecraft.networking.connection import NetworkingThread, Connection
 
 
 class Bot:
 	def __init__(self, name: str, address: str, port: int):
 		self.name = name
-		self.connection = connection.Connection(
+		self.connection = Connection(
 			address=address,
 			port=port,
 			auth_token=None,
@@ -33,7 +33,6 @@ class BotStorage(Dict[str, Bot]):
 
 	@staticmethod
 	def __patch_pycraft():
-		from mcdr_pycraft_bot.minecraft.networking.connection import NetworkingThread
 		NetworkingThread.getName = lambda self: 'MCDR Bot {}'.format(self.connection.username)
 
 	def add_bot(self, name: str, address: str, port: int) -> bool:
@@ -65,3 +64,10 @@ class BotStorage(Dict[str, Bot]):
 	def get_bot_name_list(self) -> List[str]:
 		with self.__lock:
 			return list(self.keys())
+
+	def import_bots(self, storage: dict):
+		for name, bot in list(storage.items()):
+			if isinstance(name, str) and getattr(type(bot), '__name__', None) == 'Bot':
+				with self.__lock:
+					ServerInterface.get_instance().logger.info('Imported bot {} from previous plugin instance'.format(name))
+					self[name] = bot
