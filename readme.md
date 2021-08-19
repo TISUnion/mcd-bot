@@ -8,6 +8,16 @@ Bot will be automatically set to creative mode for its safety. Don't worry it wo
 
 Don't forget to write your server port in `config/mcdr_pycraft_bot/config.json`
 
+## Config
+
+`address`: the address of the server
+
+`port`: the port of the server
+
+`gamemode`: the gamemode of the bot. Set it to `null` to keep the gamemode unchanged
+
+`name_prefix`: the name prefix of the bot. Set it to an empty string if you dont want the prefix
+
 ## Command
 
 ```
