@@ -8,7 +8,7 @@ from mcdr_pycraft_bot.bot_manager import BotStorage
 class Config(Serializable):
 	address: str = '127.0.0.1'
 	port: int = 25565
-	gamemode: str = 'survival'
+	gamemode: Optional[str] = None
 	name_prefix: str = 'bot_'
 
 
@@ -89,7 +89,7 @@ def send_help(source: CommandSource):
 
 
 def on_player_joined(server, player: str, info):
-	if bot_storage.is_bot(player):
+	if bot_storage.is_bot(player) and config.gamemode is not None:
 		server.execute('gamemode {} {}'.format(config.gamemode, player))
 
 
